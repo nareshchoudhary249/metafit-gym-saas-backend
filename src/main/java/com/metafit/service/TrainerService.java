@@ -1,9 +1,8 @@
 package com.metafit.service;
 
-import com.metafit.dto.request.UpdateTrainerNotesRequest;
 import com.metafit.dto.request.trainer.AssignMemberToTrainerRequest;
 import com.metafit.dto.request.trainer.CreateTrainerRequest;
-import com.metafit.dto.response.TrainerDetailResponse;
+import com.metafit.dto.response.trainer.TrainerDetailResponse;
 import com.metafit.dto.response.trainer.TrainerResponse;
 
 import java.util.List;

@@ -2,8 +2,11 @@ package com.metafit.controller;
 
 
 import com.metafit.dto.request.member.CreateMemberRequest;
+import com.metafit.dto.request.member.RenewMembershipRequest;
+import com.metafit.dto.request.member.UpdateMemberRequest;
 import com.metafit.dto.response.member.MemberDetailResponse;
 import com.metafit.dto.response.member.MemberResponse;
+import com.metafit.enums.MemberStatus;
 import com.metafit.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

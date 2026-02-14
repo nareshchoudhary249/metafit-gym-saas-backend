@@ -1,11 +1,13 @@
 package com.metafit.entity;
 
+import com.metafit.enums.Gender;
+import com.metafit.enums.MemberStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "members")
@@ -15,14 +17,14 @@ import java.util.UUID;
 @Builder
 @Getter
 @Setter
-public class oMember {
+public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, length = 100)
-    private String name;
+    private String fullName;
 
     @Column(nullable = false, unique = true, length = 15)
     private String phone;
@@ -56,14 +58,27 @@ public class oMember {
     @Column(nullable = false, length = 20)
     private MemberStatus status;
 
+    // Photo URL (optional)
+    @Column(name = "photo_url", length = 500)
+    private String photoUrl;
+
     @Column(name = "membership_plan", length = 50)
     private String membershipPlan;
 
     @Column(name = "membership_amount")
-    private Double membershipAmount;
+    private BigDecimal membershipAmount;
 
     @Column(name = "assigned_trainer_id")
     private Long assignedTrainerId;
+
+    @Column(name = "assigned_trainer")
+    private Long assignedTrainer;
+
+    @Column(name = "join_date")
+    private LocalDate joinDate;
+
+    @Column(name = "blood_group")
+    private String bloodGroup;
 
     @Column(name = "trainer_notes", length = 1000)
     private String trainerNotes;
@@ -97,6 +112,10 @@ public class oMember {
         updatedAt = LocalDateTime.now();
     }
 
+    public boolean isActive() {
+        return this.status == MemberStatus.ACTIVE;
+    }
+
     // Helper method to check if membership is expiring soon (within 7 days)
     public boolean isExpiringSoon() {
         if (membershipEndDate == null) return false;
@@ -105,25 +124,30 @@ public class oMember {
                 membershipEndDate.isBefore(sevenDaysFromNow);
     }
 
+    public boolean isExpiringLittle() {
+        // Critical: expires within 3 days
+        return getDaysUntilExpiry() <= 3 && getDaysUntilExpiry() >= 0;
+    }
+
     // Helper method to check if membership has expired
     public boolean isExpired() {
         if (membershipEndDate == null) return false;
         return membershipEndDate.isBefore(LocalDate.now());
     }
 
-    // Gender Enum
-    public enum Gender {
-        MALE,
-        FEMALE,
-        OTHER
+    public long getDaysUntilExpiry() {
+        return java.time.temporal.ChronoUnit.DAYS.between(
+                LocalDate.now(),
+                this.membershipEndDate
+        );
     }
 
-    // MemberStatus Enum
-   public enum MemberStatus {
-        ACTIVE,
-        EXPIRED,
-        SUSPENDED,
-        CANCELLED
+    public boolean isExpiringSoon(int days) {
+        return getDaysUntilExpiry() <= days && getDaysUntilExpiry() >= 0;
+    }
+
+    public boolean isMembershipExpired() {
+        return LocalDate.now().isAfter(membershipEndDate);
     }
 }
 

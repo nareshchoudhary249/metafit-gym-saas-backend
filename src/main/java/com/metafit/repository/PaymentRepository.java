@@ -1,7 +1,7 @@
 package com.metafit.repository;
 
 import com.metafit.entity.Payment;
-import com.metafit.entity.PaymentMethod;
+import com.metafit.enums.PaymentMethod;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

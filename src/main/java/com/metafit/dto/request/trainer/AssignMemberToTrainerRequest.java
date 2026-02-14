@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.UUID;
 
 // Assign member to trainer
 @Data
@@ -13,10 +12,10 @@ import java.util.UUID;
 public class AssignMemberToTrainerRequest {
 
     @NotNull(message = "Member ID is required")
-    private UUID memberId;
+    private Long memberId;
 
     @NotNull(message = "Trainer ID is required")
-    private UUID trainerId;
+    private Long trainerId;
 
     private String notes; // Initial assignment notes
 }

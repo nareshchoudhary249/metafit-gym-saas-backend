@@ -1,8 +1,10 @@
 package com.metafit.controller;
 
+import com.metafit.dto.request.trainer.AssignMemberToTrainerRequest;
 import com.metafit.dto.request.trainer.CreateTrainerRequest;
 import com.metafit.dto.response.trainer.MemberWithTrainerResponse;
 import com.metafit.dto.response.trainer.TrainerResponse;
+import com.metafit.service.TrainerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

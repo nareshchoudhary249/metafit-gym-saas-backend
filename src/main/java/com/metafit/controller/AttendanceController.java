@@ -3,6 +3,9 @@ package com.metafit.controller;
 import com.metafit.dto.request.attendance.CheckInRequest;
 import com.metafit.dto.request.attendance.CheckOutRequest;
 import com.metafit.dto.response.attendance.AttendanceResponse;
+import com.metafit.dto.response.attendance.MemberAttendanceItem;
+import com.metafit.dto.response.attendance.TodayAttendanceSummary;
+import com.metafit.service.AttendanceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -122,13 +125,13 @@ public class AttendanceController {
      * GET /api/attendance/member/{memberId}?days=30
      */
     @GetMapping("/member/{memberId}")
-    public ResponseEntity<List<MemberAttendanceItem>> getMemberAttendanceHistory(
-            @PathVariable UUID memberId,
+    public ResponseEntity<List<AttendanceResponse>> getMemberAttendanceHistory(
+            @PathVariable Long memberId,
             @RequestParam(defaultValue = "30") int days) {
 
         log.info("GET /api/attendance/member/{} - Last {} days", memberId, days);
 
-        List<MemberAttendanceItem> history = attendanceService
+        List<AttendanceResponse> history = attendanceService
                 .getMemberAttendanceHistory(memberId, days);
 
         return ResponseEntity.ok(history);
@@ -139,7 +142,7 @@ public class AttendanceController {
      * GET /api/attendance/member/{memberId}/is-checked-in
      */
     @GetMapping("/member/{memberId}/is-checked-in")
-    public ResponseEntity<Boolean> isMemberCheckedIn(@PathVariable UUID memberId) {
+    public ResponseEntity<Boolean> isMemberCheckedIn(@PathVariable Long memberId) {
         log.debug("GET /api/attendance/member/{}/is-checked-in", memberId);
 
         boolean isCheckedIn = attendanceService.isMemberCheckedIn(memberId);

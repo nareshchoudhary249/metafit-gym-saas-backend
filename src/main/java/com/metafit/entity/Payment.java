@@ -1,5 +1,6 @@
 package com.metafit.entity;
 
+import com.metafit.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,10 +56,10 @@ public class Payment {
     }
 }
 
-// Enum for Payment Methods
-public enum PaymentMethod {
-    CASH,
-    UPI,
-    CARD,
-    NET_BANKING
-}
+//// Enum for Payment Methods
+//public enum PaymentMethod {
+//    CASH,
+//    UPI,
+//    CARD,
+//    NET_BANKING
+//}

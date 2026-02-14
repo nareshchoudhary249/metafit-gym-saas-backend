@@ -14,7 +14,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-class Plan {
+public class Plan {
 
     @Id
     @GeneratedValue(generator = "UUID")

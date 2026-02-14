@@ -1,10 +1,8 @@
 package com.metafit.entity;
 
+import com.metafit.enums.AttendanceSource;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -22,6 +20,8 @@ import java.time.temporal.ChronoUnit;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Setter
+@Getter
 public class Attendance {
 
     @Id
@@ -36,7 +36,8 @@ public class Attendance {
     private LocalDateTime checkInTime;
 
     @Column(name = "check_out_time")
-    private LocalDateTime checkOutTime;
+    @Getter
+    public LocalDateTime checkOutTime;
 
     @Column(name = "duration_minutes")
     private Long durationMinutes;
@@ -84,16 +85,4 @@ public class Attendance {
             durationMinutes = ChronoUnit.MINUTES.between(checkInTime, checkOutTime);
         }
     }
-}
-
-/**
- * Attendance Source Enum
- * Indicates how the attendance was recorded
- */
-enum AttendanceSource {
-    MANUAL,      // Manually marked by staff
-    RFID,        // RFID card scan
-    BIOMETRIC,   // Biometric (fingerprint/face)
-    QR_CODE,     // QR code scan
-    MOBILE_APP   // Mobile app check-in
 }

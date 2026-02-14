@@ -1,6 +1,9 @@
 package com.metafit.repository;
 
+import com.metafit.entity.Attendance;
 import com.metafit.entity.Member;
+import com.metafit.enums.MemberStatus;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
@@ -28,10 +32,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByEmail(String email);
 
     // Find all active members
-    List<Member> findByStatus(Member.MemberStatus status);
+    List<Member> findByStatus(MemberStatus status);
 
     // Count active members
-    long countByStatus(Member.MemberStatus status);
+    long countByStatus(MemberStatus status);
 
     // Search members by name or phone
     @Query("SELECT m FROM Member m WHERE " +
@@ -43,7 +47,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Page<Member> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     // Find members by status with pagination
-    Page<Member> findByStatusOrderByCreatedAtDesc(Member.MemberStatus status, Pageable pageable);
+    Page<Member> findByStatusOrderByCreatedAtDesc(MemberStatus status, Pageable pageable);
 
     // Find expiring members (membership ending within given date range)
     @Query("SELECT m FROM Member m WHERE " +
@@ -89,4 +93,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    Optional<Attendance> findById(@NotNull(message = "Member ID is required") UUID memberId);
 }

@@ -1,6 +1,6 @@
 package com.metafit.dto.response.attendance;
 
-import jakarta.validation.constraints.NotNull;
+import com.metafit.entity.Attendance;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,8 +13,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AttendanceResponse {
 
-    private UUID id;
-    private UUID memberId;
+    private Long id;
+    private Long memberId;
     private String memberName;
     private String memberPhone;
     private LocalDateTime checkIn;
@@ -29,16 +29,16 @@ public class AttendanceResponse {
         response.setMemberId(attendance.getMember().getId());
         response.setMemberName(attendance.getMember().getFullName());
         response.setMemberPhone(attendance.getMember().getPhone());
-        response.setCheckIn(attendance.getCheckIn());
-        response.setCheckOut(attendance.getCheckOut());
+        response.setCheckIn(attendance.getCheckInTime());
+        response.setCheckOut(attendance.getCheckOutTime());
         response.setSource(attendance.getSource().name());
         response.setCreatedBy(attendance.getCreatedBy());
 
         // Calculate duration if checked out
-        if (attendance.getCheckOut() != null) {
+        if (attendance.getCheckOutTime() != null) {
             long minutes = java.time.Duration.between(
-                    attendance.getCheckIn(),
-                    attendance.getCheckOut()
+                    attendance.getCheckInTime(),
+                    attendance.getCheckOutTime()
             ).toMinutes();
             response.setDurationMinutes(minutes);
         }

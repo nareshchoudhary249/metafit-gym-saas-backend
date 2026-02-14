@@ -1,5 +1,6 @@
 package com.metafit.config;
 
+import com.metafit.tenancy.TenantRoutingDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;

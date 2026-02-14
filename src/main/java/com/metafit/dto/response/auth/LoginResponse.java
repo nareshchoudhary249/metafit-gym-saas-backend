@@ -1,12 +1,13 @@
 package com.metafit.dto.response.auth;
 
+import com.metafit.dto.response.TenantInfo;
 import com.metafit.entity.User;
+import com.metafit.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -18,16 +19,17 @@ public class LoginResponse {
     private Long expiresIn; // milliseconds
     private UserInfo user;
     private TenantInfo tenant;
+    private Role role;
     private Boolean forcePasswordChange;
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UserInfo {
-        private UUID id;
+        private Long id;
         private String username;
         private String fullName;
-        private String role;
+        private Role role;
         private String email;
         private String phone;
         private LocalDateTime lastLogin;
@@ -37,10 +39,11 @@ public class LoginResponse {
             info.setId(user.getId());
             info.setUsername(user.getUsername());
             info.setFullName(user.getFullName());
-            info.setRole(user.getRole().name());
+            info.setRole(user.getRole());
             info.setEmail(user.getEmail());
             info.setPhone(user.getPhone());
             info.setLastLogin(user.getLastLogin());
             return info;
         }
     }
+}

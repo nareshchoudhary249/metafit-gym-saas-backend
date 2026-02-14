@@ -1,5 +1,6 @@
 package com.metafit.security.jwt;
 
+import com.metafit.tenancy.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

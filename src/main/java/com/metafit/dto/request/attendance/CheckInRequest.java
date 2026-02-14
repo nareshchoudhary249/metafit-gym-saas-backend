@@ -15,7 +15,7 @@ import java.util.UUID;
 public class CheckInRequest {
 
     @NotNull(message = "Member ID is required")
-    private UUID memberId;
+    private Long memberId;
 
     private String source = "MANUAL"; // MANUAL, RFID, BIOMETRIC
 

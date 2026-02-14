@@ -1,7 +1,7 @@
 package com.metafit.controller;
 
+import com.metafit.service.AttendanceService;
 import com.metafit.service.MemberService;
-import com.metafit.service.impl.AttendanceService;
 import com.metafit.service.impl.PaymentService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,8 +38,8 @@ public class DashboardController {
         DashboardStats stats = new DashboardStats();
 
         // Member stats
-        stats.setActiveMembers(memberService.getActiveMembersCount());
-        stats.setExpiringLittle(memberService.getExpiringMembers().size());
+        stats.setActiveMembers(memberService.getActiveMemberCount());
+        stats.setExpiringLittle((long) memberService.getExpiringMembers().size());
 
         // Attendance stats
         stats.setTodayCheckIns(attendanceService.getTodayAttendanceCount());

@@ -1,12 +1,14 @@
 package com.metafit.service.impl;
 
-import com.metafit.dto.request.CreateMemberRequest;
-import com.metafit.dto.request.RenewMembershipRequest;
-import com.metafit.dto.request.UpdateMemberRequest;
-import com.metafit.dto.response.MemberDetailResponse;
-import com.metafit.dto.response.MemberResponse;
+import com.metafit.dto.request.member.CreateMemberRequest;
+import com.metafit.dto.request.member.RenewMembershipRequest;
+import com.metafit.dto.request.member.UpdateMemberRequest;
+import com.metafit.dto.response.member.MemberDetailResponse;
+import com.metafit.dto.response.member.MemberResponse;
+import com.metafit.entity.Attendance;
 import com.metafit.entity.Member;
-import com.metafit.entity.MemberStatus;
+import com.metafit.entity.Trainer;
+import com.metafit.enums.MemberStatus;
 import com.metafit.exception.DuplicateResourceException;
 import com.metafit.exception.ResourceNotFoundException;
 import com.metafit.repository.AttendanceRepository;
@@ -40,7 +42,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional
     public MemberResponse createMember(CreateMemberRequest request, String createdBy) {
-        log.info("Creating new member: {}", request.getName());
+        log.info("Creating new member: {}", request.getFullName());
 
         // Check for duplicate phone
         if (memberRepository.existsByPhone(request.getPhone())) {
@@ -55,14 +57,14 @@ public class MemberServiceImpl implements MemberService {
 
         // Create member entity
         Member member = Member.builder()
-                .name(request.getName())
+                .fullName(request.getFullName())
                 .phone(request.getPhone())
                 .email(request.getEmail())
                 .gender(request.getGender())
                 .dateOfBirth(request.getDateOfBirth())
                 .address(request.getAddress())
                 .emergencyContact(request.getEmergencyContact())
-                .emergencyContactName(request.getEmergencyContactName())
+                .emergencyContactName(request.getEmergencyContact())
                 .membershipStartDate(request.getMembershipStartDate())
                 .membershipEndDate(request.getMembershipEndDate())
                 .membershipPlan(request.getMembershipPlan())
@@ -144,7 +146,7 @@ public class MemberServiceImpl implements MemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found with ID: " + id));
 
         // Update fields if provided
-        if (request.getName() != null) member.setName(request.getName());
+        if (request.getFullName() != null) member.setFullName(request.getFullName());
         if (request.getPhone() != null) {
             // Check if new phone is different and not already taken
             if (!member.getPhone().equals(request.getPhone())
@@ -165,7 +167,7 @@ public class MemberServiceImpl implements MemberService {
         if (request.getDateOfBirth() != null) member.setDateOfBirth(request.getDateOfBirth());
         if (request.getAddress() != null) member.setAddress(request.getAddress());
         if (request.getEmergencyContact() != null) member.setEmergencyContact(request.getEmergencyContact());
-        if (request.getEmergencyContactName() != null) member.setEmergencyContactName(request.getEmergencyContactName());
+        if (request.getEmergencyContact() != null) member.setEmergencyContactName(request.getEmergencyContact());
         if (request.getStatus() != null) member.setStatus(request.getStatus());
         if (request.getNotes() != null) member.setNotes(request.getNotes());
 
@@ -252,13 +254,13 @@ public class MemberServiceImpl implements MemberService {
         String trainerName = null;
         if (member.getAssignedTrainerId() != null) {
             trainerName = trainerRepository.findById(member.getAssignedTrainerId())
-                    .map(trainer -> trainer.getName())
+                    .map(Trainer::getFullName)
                     .orElse(null);
         }
 
         return MemberResponse.builder()
                 .id(member.getId())
-                .name(member.getName())
+                .fullName(member.getFullName())
                 .phone(member.getPhone())
                 .email(member.getEmail())
                 .gender(member.getGender())
@@ -268,8 +270,8 @@ public class MemberServiceImpl implements MemberService {
                 .membershipPlan(member.getMembershipPlan())
                 .assignedTrainerId(member.getAssignedTrainerId())
                 .assignedTrainerName(trainerName)
-                .expiringSoon(member.isExpiringSoon())
-                .expired(member.isExpired())
+                .isExpiringSoon(member.isExpiringSoon())
+                .isExpired(member.isExpired())
                 .createdAt(member.getCreatedAt())
                 .build();
     }
@@ -278,7 +280,7 @@ public class MemberServiceImpl implements MemberService {
         String trainerName = null;
         if (member.getAssignedTrainerId() != null) {
             trainerName = trainerRepository.findById(member.getAssignedTrainerId())
-                    .map(trainer -> trainer.getName())
+                    .map(Trainer::getFullName)
                     .orElse(null);
         }
 
@@ -305,7 +307,7 @@ public class MemberServiceImpl implements MemberService {
 
         return MemberDetailResponse.builder()
                 .id(member.getId())
-                .name(member.getName())
+                .name(member.getFullName())
                 .phone(member.getPhone())
                 .email(member.getEmail())
                 .gender(member.getGender())
@@ -334,7 +336,7 @@ public class MemberServiceImpl implements MemberService {
                 .attendanceThisMonth(attendanceThisMonth)
                 .totalPayments(totalPayments != null ? totalPayments : 0.0)
                 .lastCheckIn(attendanceRepository.findTopByMemberIdOrderByCheckInTimeDesc(member.getId())
-                        .map(attendance -> attendance.getCheckInTime())
+                        .map(Attendance::getCheckInTime)
                         .orElse(null))
                 .build();
     }

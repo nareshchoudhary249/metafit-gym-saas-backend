@@ -1,9 +1,16 @@
 package com.metafit.service.impl;
 
 import com.metafit.dto.request.attendance.CheckInRequest;
+import com.metafit.dto.request.attendance.CheckOutRequest;
 import com.metafit.dto.response.attendance.AttendanceResponse;
+import com.metafit.dto.response.attendance.MemberAttendanceItem;
+import com.metafit.dto.response.attendance.TodayAttendanceSummary;
+import com.metafit.entity.Attendance;
 import com.metafit.entity.Member;
+import com.metafit.enums.AttendanceSource;
+import com.metafit.enums.MemberStatus;
 import com.metafit.exception.ResourceNotFoundException;
+import com.metafit.repository.AttendanceRepository;
 import com.metafit.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +48,7 @@ public class AttendanceServiceimpl {
                         "Member not found with ID: " + request.getMemberId()
                 ));
 
-        if (!member.getStatus().equals(Member.MembershipStatus.ACTIVE)) {
+        if (!member.getStatus().equals(MemberStatus.ACTIVE)) {
             log.warn("Attempt to check-in inactive member: {}", member.getFullName());
             throw new IllegalArgumentException(
                     "Cannot check-in. Member status is: " + member.getStatus()
@@ -65,7 +72,7 @@ public class AttendanceServiceimpl {
                 .findByMemberIdAndCheckInBetween(request.getMemberId(), todayStart, todayEnd);
 
         boolean alreadyCheckedIn = todayAttendance.stream()
-                .anyMatch(a -> a.getCheckOut() == null);
+                .anyMatch(a -> a.getCheckOutTime() == null);
 
         if (alreadyCheckedIn) {
             log.warn("Member already checked in: {}", member.getFullName());
@@ -77,14 +84,14 @@ public class AttendanceServiceimpl {
         // Create attendance record
         Attendance attendance = new Attendance();
         attendance.setMember(member);
-        attendance.setCheckIn(LocalDateTime.now());
-        attendance.setSource(Attendance.AttendanceSource.valueOf(request.getSource().toUpperCase()));
+        attendance.setCheckInTime(LocalDateTime.now());
+        attendance.setSource(AttendanceSource.valueOf(request.getSource().toUpperCase()));
         attendance.setCreatedBy(currentUsername);
 
         Attendance savedAttendance = attendanceRepository.save(attendance);
 
         log.info("Check-in successful for member: {} at {}",
-                member.getFullName(), savedAttendance.getCheckIn());
+                member.getFullName(), savedAttendance.getCheckInTime());
 
         return AttendanceResponse.fromEntity(savedAttendance);
     }
@@ -100,16 +107,16 @@ public class AttendanceServiceimpl {
                         "Attendance record not found with ID: " + request.getAttendanceId()
                 ));
 
-        if (attendance.getCheckOut() != null) {
+        if (attendance.getCheckOutTime() != null) {
             log.warn("Attendance already checked out: {}", request.getAttendanceId());
-            throw new IllegalArgumentException("Already checked out at: " + attendance.getCheckOut());
+            throw new IllegalArgumentException("Already checked out at: " + attendance.getCheckOutTime());
         }
 
-        attendance.setCheckOut(LocalDateTime.now());
+        attendance.setCheckOutTime(LocalDateTime.now());
         Attendance updatedAttendance = attendanceRepository.save(attendance);
 
         log.info("Check-out successful for member: {} at {}",
-                attendance.getMember().getFullName(), updatedAttendance.getCheckOut());
+                attendance.getMember().getFullName(), updatedAttendance.getCheckOutTime());
 
         return AttendanceResponse.fromEntity(updatedAttendance);
     }
@@ -159,7 +166,7 @@ public class AttendanceServiceimpl {
      */
     @Transactional(readOnly = true)
     public List<MemberAttendanceItem> getMemberAttendanceHistory(
-            UUID memberId, int days) {
+            Long memberId, int days) {
 
         log.debug("Fetching attendance history for member: {} (last {} days)", memberId, days);
 
@@ -174,14 +181,14 @@ public class AttendanceServiceimpl {
         return attendances.stream()
                 .map(a -> {
                     MemberAttendanceItem item = new MemberAttendanceItem();
-                    item.setDate(a.getCheckIn());
-                    item.setCheckIn(a.getCheckIn());
-                    item.setCheckOut(a.getCheckOut());
+                    item.setDate(a.getCheckInTime().toLocalDate());
+                    item.setCheckIn(a.getCheckInTime());
+                    item.setCheckOut(a.getCheckOutTime());
                     item.setSource(a.getSource().name());
 
-                    if (a.getCheckOut() != null) {
+                    if (a.getCheckOutTime() != null) {
                         long minutes = java.time.Duration.between(
-                                a.getCheckIn(), a.getCheckOut()
+                                a.getCheckInTime(), a.getCheckOutTime()
                         ).toMinutes();
                         item.setDurationMinutes(minutes);
                     }
@@ -206,13 +213,13 @@ public class AttendanceServiceimpl {
 
         long totalCheckIns = attendances.size();
         long currentlyInGym = attendances.stream()
-                .filter(a -> a.getCheckOut() == null)
+                .filter(a -> a.checkOutTime() == null)
                 .count();
         long checkedOut = totalCheckIns - currentlyInGym;
 
         LocalDateTime lastCheckIn = attendances.isEmpty()
                 ? null
-                : attendances.get(0).getCheckIn();
+                : attendances.get(0).getCheckInTime();
 
         TodayAttendanceSummary summary = new TodayAttendanceSummary(
                 totalCheckIns, currentlyInGym, checkedOut, lastCheckIn
@@ -229,17 +236,17 @@ public class AttendanceServiceimpl {
      */
     @Transactional(readOnly = true)
     public long getTodayAttendanceCount() {
-        LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
-        LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
+        LocalDateTime startTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
 
-        return attendanceRepository.countByCheckInBetween(todayStart, todayEnd);
+        return attendanceRepository.countByCheckInTimeBetween(startTime, endTime);
     }
 
     /**
      * Check if member is currently checked in
      */
     @Transactional(readOnly = true)
-    public boolean isMemberCheckedIn(UUID memberId) {
+    public boolean isMemberCheckedIn(Long memberId) {
         LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
         LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
 
@@ -247,6 +254,6 @@ public class AttendanceServiceimpl {
                 .findByMemberIdAndCheckInBetween(memberId, todayStart, todayEnd);
 
         return todayAttendance.stream()
-                .anyMatch(a -> a.getCheckOut() == null);
+                .anyMatch(a -> a.getCheckOutTime() == null);
     }
 }

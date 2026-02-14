@@ -5,6 +5,7 @@ import com.metafit.dto.response.payment.PaymentResponse;
 import com.metafit.dto.response.payment.RevenueReportResponse;
 import com.metafit.entity.Member;
 import com.metafit.entity.Payment;
+import com.metafit.enums.PaymentMethod;
 import com.metafit.exception.ResourceNotFoundException;
 import com.metafit.repository.MemberRepository;
 import com.metafit.repository.PaymentRepository;
@@ -35,12 +36,12 @@ public class PaymentService {
         Member member = memberRepository.findById(request.getMemberId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Member not found with ID: " + request.getMemberId()
-                ));
+                )).getMember();
 
         Payment payment = new Payment();
         payment.setMember(member);
         payment.setAmount(request.getAmount());
-        payment.setMethod(Payment.PaymentMethod.valueOf(request.getMethod().toUpperCase()));
+        payment.setPaymentMethod(PaymentMethod.valueOf(request.getMethod().toUpperCase()));
         payment.setPaidAt(LocalDateTime.now());
         payment.setPaymentFor(request.getPaymentFor());
         payment.setTransactionId(request.getTransactionId());

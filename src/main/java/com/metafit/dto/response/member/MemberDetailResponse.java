@@ -1,10 +1,12 @@
 package com.metafit.dto.response.member;
 
 import com.metafit.entity.Member;
+import lombok.Builder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Builder
 public class MemberDetailResponse {
     private Long id;
     private String name;

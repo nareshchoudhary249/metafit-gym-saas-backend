@@ -3,6 +3,8 @@ package com.metafit.security.filters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.metafit.entity.master.Tenant;
+import com.metafit.enums.TenantStatus;
+import com.metafit.repository.master.TenantRepository;
 import com.metafit.tenancy.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -60,10 +62,10 @@ public class SubscriptionInterceptor extends OncePerRequestFilter {
         }
 
         // Check tenant status
-        if (!tenant.getStatus().equals(Tenant.TenantStatus.ACTIVE)) {
+        if (!tenant.getStatus().equals(TenantStatus.ACTIVE)) {
             log.warn("Tenant is not active: {} - Status: {}", tenantCode, tenant.getStatus());
 
-            if (tenant.getStatus().equals(Tenant.TenantStatus.SUSPENDED)) {
+            if (tenant.getStatus().equals(TenantStatus.SUSPENDED)) {
                 sendErrorResponse(response, 402,
                         "Your subscription has been suspended. Please contact support or renew your subscription.");
             } else {

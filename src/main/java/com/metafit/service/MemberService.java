@@ -7,6 +7,7 @@ import com.metafit.dto.request.member.UpdateMemberRequest;
 import com.metafit.dto.response.member.MemberDetailResponse;
 import com.metafit.dto.response.member.MemberResponse;
 import com.metafit.entity.Member;
+import com.metafit.enums.MemberStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -42,7 +43,7 @@ public interface MemberService {
      * @param pageable Pagination details
      * @return Page of member responses
      */
-    Page<MemberResponse> getMembersByStatus(Member.MemberStatus status, Pageable pageable);
+    Page<MemberResponse> getMembersByStatus(MemberStatus status, Pageable pageable);
 
     /**
      * Search members by name or phone
@@ -97,7 +98,7 @@ public interface MemberService {
      * @param id Member ID
      * @param status New status
      */
-    void updateMemberStatus(Long id, Member.MemberStatus status);
+    void updateMemberStatus(Long id, MemberStatus status);
 
     /**
      * Check and update expired memberships (scheduled task)

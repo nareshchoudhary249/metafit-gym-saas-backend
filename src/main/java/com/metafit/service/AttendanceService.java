@@ -1,10 +1,9 @@
 package com.metafit.service;
 
-import com.metafit.dto.request.CheckInRequest;
-import com.metafit.dto.request.CheckOutRequest;
-import com.metafit.dto.response.AttendanceResponse;
-import com.metafit.dto.response.AttendanceSummaryResponse;
-import com.metafit.dto.response.attendance.TodayAttendanceSummaryResponse;
+import com.metafit.dto.request.attendance.CheckOutRequest;
+import com.metafit.dto.response.attendance.AttendanceResponse;
+import com.metafit.dto.response.attendance.MemberAttendanceItem;
+import com.metafit.dto.response.attendance.TodayAttendanceSummary;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,7 +20,7 @@ public interface AttendanceService {
      * @param checkedInBy Username of staff who checked in the member
      * @return Attendance response
      */
-    AttendanceResponse checkIn(CheckInRequest request, String checkedInBy);
+    AttendanceResponse checkIn(com.metafit.dto.request.attendance.CheckInRequest request, String checkedInBy);
 
     /**
      * Check-out a member
@@ -40,7 +39,7 @@ public interface AttendanceService {
      * Get today's attendance summary
      * @return Summary with total count, active check-ins, etc.
      */
-    AttendanceSummaryResponse getTodaySummary();
+    TodayAttendanceSummary getTodaySummary();
 
     /**
      * Get attendance count for today
@@ -76,11 +75,19 @@ public interface AttendanceService {
      * @param memberId Member ID
      * @return Statistics (total count, average duration, etc.)
      */
-    TodayAttendanceSummaryResponse getMemberAttendanceStats(Long memberId);
+    TodayAttendanceSummary getMemberAttendanceStats(Long memberId);
 
     /**
      * Get active check-ins (members currently in gym)
      * @return List of active attendance records
      */
     List<AttendanceResponse> getActiveCheckIns();
+
+    // ✅ ADDED: Missing methods
+    TodayAttendanceSummary getTodayAttendanceSummary();
+    List<AttendanceResponse> getAttendanceByDateRange(LocalDate startDate, LocalDate endDate);
+    List<MemberAttendanceItem> getMemberAttendanceHistory(Long memberId, int days);
+    List<AttendanceResponse> getMembersCurrentlyInside();
+    Long getAttendanceCount(LocalDate date);
+    boolean hasCheckedInToday(Long memberId);
 }

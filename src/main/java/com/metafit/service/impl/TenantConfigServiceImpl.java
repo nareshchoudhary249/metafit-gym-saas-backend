@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.metafit.dto.response.config.TenantConfigResponse;
 import com.metafit.entity.master.Tenant;
 import com.metafit.exception.ResourceNotFoundException;
+import com.metafit.tenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

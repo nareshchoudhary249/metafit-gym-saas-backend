@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -13,5 +12,5 @@ import java.util.UUID;
 public class CheckOutRequest {
 
     @NotNull(message = "Attendance ID is required")
-    private UUID attendanceId;
+    private Long attendanceId;
 }

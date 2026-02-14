@@ -1,9 +1,20 @@
 package com.metafit.service.impl;
 
+import com.metafit.dto.request.auth.ChangePasswordRequest;
+import com.metafit.dto.request.auth.CreateUserRequest;
 import com.metafit.dto.request.auth.LoginRequest;
+import com.metafit.dto.response.TenantInfo;
 import com.metafit.dto.response.auth.LoginResponse;
+import com.metafit.dto.response.auth.UserResponse;
+import com.metafit.entity.User;
+import com.metafit.entity.master.Tenant;
+import com.metafit.enums.TenantStatus;
+import com.metafit.exception.ResourceNotFoundException;
+import com.metafit.exception.UnauthorizedException;
 import com.metafit.repository.UserRepository;
+import com.metafit.repository.master.TenantRepository;
 import com.metafit.security.jwt.JwtUtil;
+import com.metafit.tenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,7 +61,7 @@ public class AuthServiceImpl {
                 });
 
         // Check tenant status
-        if (!tenant.getStatus().equals(Tenant.TenantStatus.ACTIVE)) {
+        if (!tenant.getStatus().equals(TenantStatus.ACTIVE)) {
             log.error("Tenant is not active: {}", tenantCode);
             throw new UnauthorizedException("Your subscription is not active. Please contact support.");
         }
@@ -98,7 +109,7 @@ public class AuthServiceImpl {
         response.setUser(LoginResponse.UserInfo.fromEntity(user));
         response.setForcePasswordChange(user.getForcePasswordChange());
 
-        LoginResponse.TenantInfo tenantInfo = new LoginResponse.TenantInfo();
+        TenantInfo tenantInfo = new TenantInfo();
         tenantInfo.setCode(tenant.getCode());
         tenantInfo.setName(tenant.getName());
         tenantInfo.setStatus(tenant.getStatus().name());
@@ -193,7 +204,7 @@ public class AuthServiceImpl {
         user.setUsername(request.getUsername());
         user.setFullName(request.getFullName());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(role);
+        user.setRole(request.getRole());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setIsActive(true);
