@@ -5,8 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -51,16 +49,6 @@ public class MetaFitApplication {
         log.info("=================================================================");
         log.info("       MetaFit Application Started Successfully! 🎉              ");
         log.info("=================================================================");
-    }
-
-    /**
-     * Password Encoder Bean
-     * Uses BCrypt with strength 10 for secure password hashing
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        log.info("Initializing BCrypt Password Encoder with strength 10");
-        return new BCryptPasswordEncoder(10);
     }
 
     /**

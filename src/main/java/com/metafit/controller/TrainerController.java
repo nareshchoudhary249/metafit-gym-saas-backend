@@ -2,8 +2,9 @@ package com.metafit.controller;
 
 import com.metafit.dto.request.trainer.AssignMemberToTrainerRequest;
 import com.metafit.dto.request.trainer.CreateTrainerRequest;
-import com.metafit.dto.response.trainer.MemberWithTrainerResponse;
 import com.metafit.dto.response.trainer.TrainerResponse;
+import com.metafit.dto.request.trainer.UpdateTrainerNotesRequest;
+import com.metafit.dto.response.member.MemberResponse;
 import com.metafit.service.TrainerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,9 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * REST controller for trainer management
@@ -36,7 +37,8 @@ public class TrainerController {
 
         log.info("POST /api/trainers - Creating trainer: {}", request.getFullName());
 
-        TrainerResponse response = trainerService.createTrainer(request);
+        String username = getCurrentUsername();
+        TrainerResponse response = trainerService.createTrainer(request, username);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -49,7 +51,7 @@ public class TrainerController {
     public ResponseEntity<List<TrainerResponse>> getAllTrainers() {
         log.info("GET /api/trainers - Fetching all trainers");
 
-        List<TrainerResponse> trainers = trainerService.getAllActiveTrainers();
+        List<TrainerResponse> trainers = trainerService.getActiveTrainers();
 
         return ResponseEntity.ok(trainers);
     }
@@ -59,15 +61,15 @@ public class TrainerController {
      * POST /api/trainers/assign
      */
     @PostMapping("/assign")
-    public ResponseEntity<MemberWithTrainerResponse> assignMemberToTrainer(
+    public ResponseEntity<Void> assignMemberToTrainer(
             @Valid @RequestBody AssignMemberToTrainerRequest request) {
 
         log.info("POST /api/trainers/assign - Assigning member {} to trainer {}",
                 request.getMemberId(), request.getTrainerId());
 
-        MemberWithTrainerResponse response = trainerService.assignMemberToTrainer(request);
+        trainerService.assignMemberToTrainer(request);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -75,7 +77,7 @@ public class TrainerController {
      * DELETE /api/trainers/assign/{memberId}
      */
     @DeleteMapping("/assign/{memberId}")
-    public ResponseEntity<Void> unassignMemberFromTrainer(@PathVariable UUID memberId) {
+    public ResponseEntity<Void> unassignMemberFromTrainer(@PathVariable Long memberId) {
         log.info("DELETE /api/trainers/assign/{} - Unassigning member", memberId);
 
         trainerService.unassignMemberFromTrainer(memberId);
@@ -88,12 +90,12 @@ public class TrainerController {
      * GET /api/trainers/{trainerId}/members
      */
     @GetMapping("/{trainerId}/members")
-    public ResponseEntity<List<MemberWithTrainerResponse>> getTrainerMembers(
-            @PathVariable UUID trainerId) {
+    public ResponseEntity<List<MemberResponse>> getTrainerMembers(
+            @PathVariable Long trainerId) {
 
         log.info("GET /api/trainers/{}/members", trainerId);
 
-        List<MemberWithTrainerResponse> members = trainerService.getTrainerMembers(trainerId);
+        List<MemberResponse> members = trainerService.getTrainerMembers(trainerId);
 
         return ResponseEntity.ok(members);
     }
@@ -104,15 +106,18 @@ public class TrainerController {
      */
     @PutMapping("/members/{memberId}/notes")
     public ResponseEntity<Void> updateTrainerNotes(
-            @PathVariable UUID memberId,
-            @RequestBody String notes,
-            Authentication authentication) {
+            @PathVariable Long memberId,
+            @Valid @RequestBody UpdateTrainerNotesRequest request) {
 
         log.info("PUT /api/trainers/members/{}/notes", memberId);
 
-        String trainerUsername = authentication.getName();
-        trainerService.updateTrainerNotes(memberId, notes, trainerUsername);
+        trainerService.updateMemberNotes(memberId, request, request.getTrainerId());
 
         return ResponseEntity.noContent().build();
+    }
+
+    private String getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null ? authentication.getName() : "system";
     }
 }

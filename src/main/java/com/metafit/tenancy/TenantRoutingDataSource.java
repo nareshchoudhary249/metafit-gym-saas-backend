@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
-import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
@@ -14,23 +13,29 @@ import java.util.Map;
  * Dynamic routing datasource that switches database connections based on tenant context
  */
 @Slf4j
-@Component
 public class TenantRoutingDataSource extends AbstractRoutingDataSource {
 
     private final Map<Object, Object> tenantDataSources = new HashMap<>();
     private final String datasourceUrlPrefix;
     private final String datasourceUsername;
     private final String datasourcePassword;
+    private final String datasourceDriverClassName;
 
     public TenantRoutingDataSource(
             String urlPrefix,
             String username,
-            String password) {
+            String password,
+            String driverClassName,
+            String defaultDbName) {
         this.datasourceUrlPrefix = urlPrefix;
         this.datasourceUsername = username;
         this.datasourcePassword = password;
+        this.datasourceDriverClassName = driverClassName;
 
         setTargetDataSources(tenantDataSources);
+        if (defaultDbName != null && !defaultDbName.isBlank()) {
+            setDefaultTargetDataSource(createDataSource(defaultDbName, "default"));
+        }
         afterPropertiesSet();
     }
 
@@ -52,18 +57,7 @@ public class TenantRoutingDataSource extends AbstractRoutingDataSource {
 
         log.info("Creating new datasource for tenant: {} -> {}", tenantCode, dbName);
 
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(datasourceUrlPrefix + dbName);
-        config.setUsername(datasourceUsername);
-        config.setPassword(datasourcePassword);
-        config.setMaximumPoolSize(5);
-        config.setMinimumIdle(1);
-        config.setConnectionTimeout(30000);
-        config.setIdleTimeout(600000);
-        config.setMaxLifetime(1800000);
-        config.setPoolName("HikariPool-" + tenantCode);
-
-        DataSource dataSource = new HikariDataSource(config);
+        DataSource dataSource = createDataSource(dbName, tenantCode);
         tenantDataSources.put(tenantCode, dataSource);
 
         // Refresh the routing datasource
@@ -90,5 +84,21 @@ public class TenantRoutingDataSource extends AbstractRoutingDataSource {
 
     public boolean tenantExists(String tenantCode) {
         return tenantDataSources.containsKey(tenantCode);
+    }
+
+    private DataSource createDataSource(String dbName, String tenantCode) {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(datasourceUrlPrefix + dbName);
+        config.setUsername(datasourceUsername);
+        config.setPassword(datasourcePassword);
+        config.setDriverClassName(datasourceDriverClassName);
+        config.setMaximumPoolSize(5);
+        config.setMinimumIdle(1);
+        config.setConnectionTimeout(30000);
+        config.setIdleTimeout(600000);
+        config.setMaxLifetime(1800000);
+        config.setPoolName("HikariPool-" + tenantCode);
+
+        return new HikariDataSource(config);
     }
 }

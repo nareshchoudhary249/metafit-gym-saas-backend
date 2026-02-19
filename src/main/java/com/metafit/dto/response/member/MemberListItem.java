@@ -1,12 +1,12 @@
 package com.metafit.dto.response.member;
 
 import com.metafit.entity.Member;
+import com.metafit.enums.MemberStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -15,7 +15,7 @@ public class MemberListItem {
     private Long id;
     private String fullName;
     private String phone;
-    private Member.MemberStatus status;
+    private MemberStatus status;
     private LocalDate membershipEndDate;
     private Integer daysUntilExpiry;
     private Boolean isExpiringLittle;

@@ -9,6 +9,7 @@ import com.metafit.enums.PaymentMethod;
 import com.metafit.exception.ResourceNotFoundException;
 import com.metafit.repository.MemberRepository;
 import com.metafit.repository.PaymentRepository;
+import com.metafit.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,11 +25,12 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class PaymentService {
+public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final MemberRepository memberRepository;
 
+    @Override
     public PaymentResponse createPayment(CreatePaymentRequest request, String currentUsername) {
         log.info("Creating payment for member: {}, Amount: {}",
                 request.getMemberId(), request.getAmount());
@@ -36,17 +38,16 @@ public class PaymentService {
         Member member = memberRepository.findById(request.getMemberId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Member not found with ID: " + request.getMemberId()
-                )).getMember();
+                ));
 
         Payment payment = new Payment();
         payment.setMember(member);
         payment.setAmount(request.getAmount());
         payment.setPaymentMethod(PaymentMethod.valueOf(request.getMethod().toUpperCase()));
-        payment.setPaidAt(LocalDateTime.now());
-        payment.setPaymentFor(request.getPaymentFor());
+        payment.setPaymentDate(LocalDateTime.now());
         payment.setTransactionId(request.getTransactionId());
         payment.setNotes(request.getNotes());
-        payment.setReceivedBy(currentUsername);
+        payment.setCreatedBy(currentUsername);
 
         Payment savedPayment = paymentRepository.save(payment);
 
@@ -57,10 +58,11 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public List<PaymentResponse> getMemberPaymentHistory(UUID memberId) {
+    @Override
+    public List<PaymentResponse> getMemberPaymentHistory(Long memberId) {
         log.debug("Fetching payment history for member: {}", memberId);
 
-        List<Payment> payments = paymentRepository.findByMemberIdOrderByPaidAtDesc(memberId);
+        List<Payment> payments = paymentRepository.findByMemberIdOrderByPaymentDateDesc(memberId);
 
         return payments.stream()
                 .map(PaymentResponse::fromEntity)
@@ -68,13 +70,14 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public List<PaymentResponse> getPaymentsByDateRange(LocalDate startDate, LocalDate endDate) {
         log.debug("Fetching payments from {} to {}", startDate, endDate);
 
         LocalDateTime start = LocalDateTime.of(startDate, LocalTime.MIN);
         LocalDateTime end = LocalDateTime.of(endDate, LocalTime.MAX);
 
-        List<Payment> payments = paymentRepository.findByPaidAtBetweenOrderByPaidAtDesc(start, end);
+        List<Payment> payments = paymentRepository.findPaymentsBetweenDates(start, end);
 
         return payments.stream()
                 .map(PaymentResponse::fromEntity)
@@ -82,13 +85,14 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public RevenueReportResponse getTodayRevenue() {
         log.debug("Calculating today's revenue");
 
         LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
         LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
 
-        List<Payment> payments = paymentRepository.findByPaidAtBetweenOrderByPaidAtDesc(todayStart, todayEnd);
+        List<Payment> payments = paymentRepository.findTodayPayments(todayStart, todayEnd);
 
         BigDecimal totalRevenue = payments.stream()
                 .map(Payment::getAmount)
@@ -96,7 +100,7 @@ public class PaymentService {
 
         Map<String, BigDecimal> breakdown = payments.stream()
                 .collect(Collectors.groupingBy(
-                        p -> p.getMethod().name(),
+                        p -> p.getPaymentMethod().name(),
                         Collectors.reducing(BigDecimal.ZERO, Payment::getAmount, BigDecimal::add)
                 ));
 

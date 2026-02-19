@@ -32,7 +32,7 @@ public enum DeviceStatus {
     }
 
     public boolean isOperational() {
-        return this == ACTIVE;
+        return this == ONLINE;
     }
 
     public boolean needsAttention() {

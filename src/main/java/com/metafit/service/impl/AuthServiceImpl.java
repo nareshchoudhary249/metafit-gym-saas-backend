@@ -14,6 +14,7 @@ import com.metafit.exception.UnauthorizedException;
 import com.metafit.repository.UserRepository;
 import com.metafit.repository.master.TenantRepository;
 import com.metafit.security.jwt.JwtUtil;
+import com.metafit.service.AuthService;
 import com.metafit.tenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -33,12 +33,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl {
+public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final TenantRepository tenantRepository;
     private final JwtUtil jwtUtil;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Value("${jwt.expiration}")
     private Long jwtExpiration;
@@ -49,6 +49,7 @@ public class AuthServiceImpl {
     /**
      * Authenticate user and generate JWT token
      */
+    @Override
     @Transactional
     public LoginResponse login(LoginRequest request, String tenantCode) {
         log.info("Login attempt for user: {} in tenant: {}", request.getUsername(), tenantCode);
@@ -121,6 +122,7 @@ public class AuthServiceImpl {
     /**
      * Refresh JWT token
      */
+    @Override
     public LoginResponse refreshToken(String refreshToken) {
         log.debug("Token refresh requested");
 
@@ -150,6 +152,7 @@ public class AuthServiceImpl {
     /**
      * Change user password
      */
+    @Override
     @Transactional
     public void changePassword(ChangePasswordRequest request, String username) {
         log.info("Password change requested for user: {}", username);
@@ -181,6 +184,7 @@ public class AuthServiceImpl {
     /**
      * Create new user (Owner/Admin only)
      */
+    @Override
     @Transactional
     public UserResponse createUser(CreateUserRequest request) {
         log.info("Creating new user: {}", request.getUsername());
@@ -191,12 +195,8 @@ public class AuthServiceImpl {
             throw new IllegalArgumentException("Username already exists");
         }
 
-        // Validate role
-        User.UserRole role;
-        try {
-            role = User.UserRole.valueOf(request.getRole().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid role: " + request.getRole());
+        if (request.getRole() == null) {
+            throw new IllegalArgumentException("Role is required");
         }
 
         // Create user
@@ -220,6 +220,7 @@ public class AuthServiceImpl {
     /**
      * Get all users
      */
+    @Override
     @Transactional(readOnly = true)
     public List<UserResponse> getAllUsers() {
         log.debug("Fetching all users");
@@ -234,8 +235,9 @@ public class AuthServiceImpl {
     /**
      * Get user by ID
      */
+    @Override
     @Transactional(readOnly = true)
-    public UserResponse getUserById(UUID id) {
+    public UserResponse getUserById(Long id) {
         log.debug("Fetching user by ID: {}", id);
 
         User user = userRepository.findById(id)
@@ -247,8 +249,9 @@ public class AuthServiceImpl {
     /**
      * Update user status (activate/deactivate)
      */
+    @Override
     @Transactional
-    public UserResponse updateUserStatus(UUID id, Boolean isActive) {
+    public UserResponse updateUserStatus(Long id, Boolean isActive) {
         log.info("Updating user status: {} -> {}", id, isActive);
 
         User user = userRepository.findById(id)
@@ -265,8 +268,9 @@ public class AuthServiceImpl {
     /**
      * Reset user password (Admin only)
      */
+    @Override
     @Transactional
-    public void resetUserPassword(UUID userId, String newPassword) {
+    public void resetUserPassword(Long userId, String newPassword, String resetBy) {
         log.info("Password reset for user ID: {}", userId);
 
         User user = userRepository.findById(userId)
@@ -279,5 +283,36 @@ public class AuthServiceImpl {
         userRepository.save(user);
 
         log.info("Password reset successfully for user: {}", user.getUsername());
+    }
+
+    @Override
+    public void logout(String username) {
+        log.info("Logout requested for user: {}", username);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse getCurrentUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return UserResponse.fromEntity(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean mustChangePassword(String username) {
+        return userRepository.findByUsername(username)
+                .map(User::getForcePasswordChange)
+                .orElse(false);
+    }
+
+    @Override
+    public boolean validateToken(String token) {
+        return jwtUtil.validateToken(token);
+    }
+
+    @Override
+    public String getUsernameFromToken(String token) {
+        return jwtUtil.getUsernameFromToken(token);
     }
 }

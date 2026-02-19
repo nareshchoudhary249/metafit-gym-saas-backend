@@ -3,7 +3,6 @@ package com.metafit.repository;
 import com.metafit.entity.Attendance;
 import com.metafit.entity.Member;
 import com.metafit.enums.MemberStatus;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
@@ -39,7 +37,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // Search members by name or phone
     @Query("SELECT m FROM Member m WHERE " +
-            "LOWER(m.name) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(m.fullName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
             "m.phone LIKE CONCAT('%', :query, '%')")
     List<Member> searchByNameOrPhone(@Param("query") String query);
 
@@ -94,5 +92,4 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             @Param("endDate") LocalDate endDate
     );
 
-    Optional<Attendance> findById(@NotNull(message = "Member ID is required") UUID memberId);
 }

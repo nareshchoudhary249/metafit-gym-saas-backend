@@ -21,14 +21,16 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     /**
      * Find today's attendance records
      */
-    @Query("SELECT a FROM Attendance a WHERE " + "DATE(a.checkInTime) = CURRENT_DATE " + "ORDER BY a.checkInTime DESC")
-    List<Attendance> findTodayAttendance();
+    @Query("SELECT a FROM Attendance a WHERE a.checkInTime BETWEEN :startDate AND :endDate ORDER BY a.checkInTime DESC")
+    List<Attendance> findTodayAttendance(@Param("startDate") LocalDateTime startDate,
+                                         @Param("endDate") LocalDateTime endDate);
 
     /**
      * Count today's check-ins
      */
-    @Query("SELECT COUNT(a) FROM Attendance a WHERE " + "DATE(a.checkInTime) = CURRENT_DATE")
-    Long countTodayAttendance();
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.checkInTime BETWEEN :startDate AND :endDate")
+    Long countTodayAttendance(@Param("startDate") LocalDateTime startDate,
+                              @Param("endDate") LocalDateTime endDate);
 
     /**
      * Find attendance by member ID
@@ -44,8 +46,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     /**
      * Check if member is currently checked in (no checkout time)
      */
-    @Query("SELECT a FROM Attendance a WHERE " + "a.member.id = :memberId AND " + "a.checkOutTime IS NULL AND " + "DATE(a.checkInTime) = CURRENT_DATE")
-    Optional<Attendance> findTodayActiveCheckIn(@Param("memberId") Long memberId);
+    @Query("SELECT a FROM Attendance a WHERE a.member.id = :memberId AND a.checkOutTime IS NULL " +
+            "AND a.checkInTime BETWEEN :startDate AND :endDate")
+    Optional<Attendance> findTodayActiveCheckIn(@Param("memberId") Long memberId,
+                                                @Param("startDate") LocalDateTime startDate,
+                                                @Param("endDate") LocalDateTime endDate);
 
     /**
      * Find attendance records between dates
@@ -72,7 +77,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     /**
      * Get attendance count by date (for analytics)
      */
-    @Query("SELECT DATE(a.checkInTime) as date, COUNT(a) as count " + "FROM Attendance a WHERE " + "a.checkInTime BETWEEN :startDate AND :endDate " + "GROUP BY DATE(a.checkInTime) " + "ORDER BY DATE(a.checkInTime)")
+    @Query("SELECT CAST(a.checkInTime AS date) as date, COUNT(a) as count " +
+            "FROM Attendance a WHERE " +
+            "a.checkInTime BETWEEN :startDate AND :endDate " +
+            "GROUP BY CAST(a.checkInTime AS date) " +
+            "ORDER BY CAST(a.checkInTime AS date)")
     List<Object[]> getAttendanceCountByDate(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     /**
@@ -82,20 +91,16 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     Double getAverageDurationByMemberId(@Param("memberId") Long memberId);
 
     /**
-     * Find members who checked in today
-     */
-    @Query("SELECT DISTINCT a.member.id FROM Attendance a WHERE " + "DATE(a.checkInTime) = CURRENT_DATE")
-    List<Long> findMemberIdsCheckedInToday();
-
-    /**
      * Count active check-ins (not yet checked out)
      */
-    @Query("SELECT COUNT(a) FROM Attendance a WHERE " + "DATE(a.checkInTime) = CURRENT_DATE AND " + "a.checkOutTime IS NULL")
-    Long countActiveCheckIns();
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.checkInTime BETWEEN :startDate AND :endDate " +
+            "AND a.checkOutTime IS NULL")
+    Long countActiveCheckIns(@Param("startDate") LocalDateTime startDate,
+                             @Param("endDate") LocalDateTime endDate);
 
-    List<Attendance> findByMemberIdAndCheckInBetween(Long memberId, LocalDateTime startDate, LocalDateTime endDate);
+    List<Attendance> findByMemberIdAndCheckInTimeBetween(Long memberId, LocalDateTime startDate, LocalDateTime endDate);
 
-    List<Attendance> findByCheckInBetweenOrderByCheckInDesc(LocalDateTime startDate, LocalDateTime endDate);
+    List<Attendance> findByCheckInTimeBetweenOrderByCheckInTimeDesc(LocalDateTime startDate, LocalDateTime endDate);
 
     // ADDED: Count check-ins between date-time range
     Long countByCheckInTimeBetween(LocalDateTime startTime, LocalDateTime endTime);

@@ -1,9 +1,9 @@
 package com.metafit.controller;
 
-import com.metafit.dto.*;
+import com.metafit.dto.request.payment.CreatePaymentRequest;
 import com.metafit.dto.response.payment.PaymentResponse;
 import com.metafit.dto.response.payment.RevenueReportResponse;
-import com.metafit.service.impl.PaymentService;
+import com.metafit.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -36,7 +35,7 @@ public class PaymentController {
     }
 
     @GetMapping("/member/{memberId}")
-    public ResponseEntity<List<PaymentResponse>> getMemberPaymentHistory(@PathVariable UUID memberId) {
+    public ResponseEntity<List<PaymentResponse>> getMemberPaymentHistory(@PathVariable Long memberId) {
         log.info("GET /api/payments/member/{}", memberId);
 
         List<PaymentResponse> payments = paymentService.getMemberPaymentHistory(memberId);

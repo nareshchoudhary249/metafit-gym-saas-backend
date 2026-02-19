@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import com.metafit.dto.response.member.MemberResponse;
+
 import java.util.List;
 
 /**
@@ -19,7 +21,7 @@ import java.util.List;
 public class TrainerDetailResponse {
 
     private Long id;
-    private String name;
+    private String fullName;
     private String email;
     private String phone;
     private String specialization;
@@ -35,7 +37,7 @@ public class TrainerDetailResponse {
     private Boolean active;
 
     // Assigned Members (detailed list)
-    private List<AssignedMemberInfo> assignedMembers;
+    private List<MemberResponse> assignedMembers;
 
     // Audit Information
     private LocalDateTime createdAt;
@@ -52,19 +54,4 @@ public class TrainerDetailResponse {
         }
     }
 
-    /**
-     * Inner class for assigned member information
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AssignedMemberInfo {
-        private Long memberId;
-        private String memberName;
-        private String memberPhone;
-        private String memberEmail;
-        private LocalDateTime assignedDate;
-        private Integer daysAssigned; // Days since assignment
-    }
 }

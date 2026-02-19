@@ -44,7 +44,7 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long> {
     /**
      * Find all active trainers ordered by name
      */
-    @Query("SELECT t FROM Trainer t WHERE t.active = true ORDER BY t.name ASC")
+    @Query("SELECT t FROM Trainer t WHERE t.active = true ORDER BY t.fullName ASC")
     List<Trainer> findActiveTrainersOrderedByName();
 
     /**
@@ -63,7 +63,7 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long> {
      * Search trainers by name
      */
     @Query("SELECT t FROM Trainer t WHERE " +
-            "LOWER(t.name) LIKE LOWER(CONCAT('%', :query, '%'))")
+            "LOWER(t.fullName) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Trainer> searchByName(@Param("query") String query);
 
     /**
@@ -76,21 +76,21 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long> {
     /**
      * Get trainer with current client count
      */
-    @Query("SELECT t.id, t.name, COUNT(m.id) as clientCount " +
+    @Query("SELECT t.id, t.fullName, COUNT(m.id) as clientCount " +
             "FROM Trainer t LEFT JOIN Member m ON m.assignedTrainerId = t.id " +
             "WHERE t.id = :trainerId " +
-            "GROUP BY t.id, t.name")
+            "GROUP BY t.id, t.fullName")
     Object[] getTrainerWithClientCount(@Param("trainerId") Long trainerId);
 
     /**
      * Get all trainers with their client counts
      */
-    @Query("SELECT t.id, t.name, t.email, t.phone, t.specialization, t.maxClients, " +
+    @Query("SELECT t.id, t.fullName, t.email, t.phone, t.specialization, t.maxClients, " +
             "COUNT(m.id) as clientCount " +
             "FROM Trainer t LEFT JOIN Member m ON m.assignedTrainerId = t.id " +
             "WHERE t.active = true " +
-            "GROUP BY t.id, t.name, t.email, t.phone, t.specialization, t.maxClients " +
-            "ORDER BY t.name")
+            "GROUP BY t.id, t.fullName, t.email, t.phone, t.specialization, t.maxClients " +
+            "ORDER BY t.fullName")
     List<Object[]> getAllTrainersWithClientCounts();
 
     /**

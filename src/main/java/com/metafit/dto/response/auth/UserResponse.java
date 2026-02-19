@@ -1,7 +1,6 @@
 package com.metafit.dto.response.auth;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import com.metafit.entity.User;
 import com.metafit.enums.Role;

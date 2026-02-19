@@ -1,8 +1,11 @@
 package com.metafit.service.impl;
 
 
+import com.metafit.dto.request.trainer.AssignMemberToTrainerRequest;
 import com.metafit.dto.request.trainer.CreateTrainerRequest;
+import com.metafit.dto.request.trainer.UpdateTrainerNotesRequest;
 import com.metafit.dto.response.member.MemberResponse;
+import com.metafit.dto.response.trainer.TrainerDetailResponse;
 import com.metafit.dto.response.trainer.TrainerResponse;
 import com.metafit.entity.Member;
 import com.metafit.entity.Trainer;
@@ -34,7 +37,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     @Transactional
     public TrainerResponse createTrainer(CreateTrainerRequest request, String createdBy) {
-        log.info("Creating new trainer: {}", request.getName());
+        log.info("Creating new trainer: {}", request.getFullName());
 
         // Check for duplicate email
         if (request.getEmail() != null && !request.getEmail().isEmpty()
@@ -55,7 +58,7 @@ public class TrainerServiceImpl implements TrainerService {
                 .specialization(request.getSpecialization())
                 .bio(request.getBio())
                 .maxClients(request.getMaxClients() != null ? request.getMaxClients() : 20)
-                .isActive(true)
+                .active(true)
                 .createdBy(createdBy)
                 .build();
 
@@ -103,8 +106,8 @@ public class TrainerServiceImpl implements TrainerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Trainer not found with ID: " + id));
 
         // Update fields if provided
-        if (request.getName() != null) {
-            trainer.setName(request.getName());
+        if (request.getFullName() != null) {
+            trainer.setFullName(request.getFullName());
         }
 
         if (request.getEmail() != null) {
@@ -157,7 +160,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @Transactional
-    public void assignMemberToTrainer(AssignTrainerRequest request) {
+    public void assignMemberToTrainer(AssignMemberToTrainerRequest request) {
         log.info("Assigning member {} to trainer {}", request.getMemberId(), request.getTrainerId());
 
         // Validate trainer exists and is active
@@ -333,15 +336,14 @@ public class TrainerServiceImpl implements TrainerService {
 
         return TrainerResponse.builder()
                 .id(trainer.getId())
-                .name(trainer.getName())
+                .fullName(trainer.getFullName())
                 .email(trainer.getEmail())
                 .phone(trainer.getPhone())
                 .specialization(trainer.getSpecialization())
+                .bio(trainer.getBio())
                 .maxClients(trainer.getMaxClients())
-                .currentClients(assignedMembers)
+                .currentClients((int) assignedMembers)
                 .active(trainer.getActive())
-                .hasCapacity(assignedMembers < trainer.getMaxClients())
-                .createdAt(trainer.getCreatedAt())
                 .build();
     }
 
@@ -351,13 +353,13 @@ public class TrainerServiceImpl implements TrainerService {
 
         return TrainerDetailResponse.builder()
                 .id(trainer.getId())
-                .name(trainer.getName())
+                .fullName(trainer.getFullName())
                 .email(trainer.getEmail())
                 .phone(trainer.getPhone())
                 .specialization(trainer.getSpecialization())
                 .bio(trainer.getBio())
                 .maxClients(trainer.getMaxClients())
-                .currentClients(assignedMembers)
+                .currentClients((int) assignedMembers)
                 .active(trainer.getActive())
                 .hasCapacity(assignedMembers < trainer.getMaxClients())
                 .assignedMembers(members)

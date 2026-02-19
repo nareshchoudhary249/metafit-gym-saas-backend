@@ -12,6 +12,7 @@ import com.metafit.enums.MemberStatus;
 import com.metafit.exception.ResourceNotFoundException;
 import com.metafit.repository.AttendanceRepository;
 import com.metafit.repository.MemberRepository;
+import com.metafit.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AttendanceServiceimpl {
+public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
     private final MemberRepository memberRepository;
@@ -39,6 +40,7 @@ public class AttendanceServiceimpl {
     /**
      * Mark member check-in
      */
+    @Override
     public AttendanceResponse checkIn(CheckInRequest request, String currentUsername) {
         log.info("Check-in requested for member: {}", request.getMemberId());
 
@@ -69,7 +71,7 @@ public class AttendanceServiceimpl {
         LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
 
         List<Attendance> todayAttendance = attendanceRepository
-                .findByMemberIdAndCheckInBetween(request.getMemberId(), todayStart, todayEnd);
+                .findByMemberIdAndCheckInTimeBetween(request.getMemberId(), todayStart, todayEnd);
 
         boolean alreadyCheckedIn = todayAttendance.stream()
                 .anyMatch(a -> a.getCheckOutTime() == null);
@@ -99,6 +101,7 @@ public class AttendanceServiceimpl {
     /**
      * Mark member check-out
      */
+    @Override
     public AttendanceResponse checkOut(CheckOutRequest request) {
         log.info("Check-out requested for attendance: {}", request.getAttendanceId());
 
@@ -125,6 +128,7 @@ public class AttendanceServiceimpl {
      * Get today's attendance list
      */
     @Transactional(readOnly = true)
+    @Override
     public List<AttendanceResponse> getTodayAttendance() {
         log.debug("Fetching today's attendance");
 
@@ -132,7 +136,7 @@ public class AttendanceServiceimpl {
         LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
 
         List<Attendance> attendances = attendanceRepository
-                .findByCheckInBetweenOrderByCheckInDesc(todayStart, todayEnd);
+                .findByCheckInTimeBetweenOrderByCheckInTimeDesc(todayStart, todayEnd);
 
         log.info("Today's attendance count: {}", attendances.size());
 
@@ -145,6 +149,7 @@ public class AttendanceServiceimpl {
      * Get attendance by date range
      */
     @Transactional(readOnly = true)
+    @Override
     public List<AttendanceResponse> getAttendanceByDateRange(
             LocalDate startDate, LocalDate endDate) {
 
@@ -154,7 +159,7 @@ public class AttendanceServiceimpl {
         LocalDateTime end = LocalDateTime.of(endDate, LocalTime.MAX);
 
         List<Attendance> attendances = attendanceRepository
-                .findByCheckInBetweenOrderByCheckInDesc(start, end);
+                .findByCheckInTimeBetweenOrderByCheckInTimeDesc(start, end);
 
         return attendances.stream()
                 .map(AttendanceResponse::fromEntity)
@@ -165,6 +170,7 @@ public class AttendanceServiceimpl {
      * Get member attendance history
      */
     @Transactional(readOnly = true)
+    @Override
     public List<MemberAttendanceItem> getMemberAttendanceHistory(
             Long memberId, int days) {
 
@@ -174,7 +180,7 @@ public class AttendanceServiceimpl {
         LocalDateTime now = LocalDateTime.now();
 
         List<Attendance> attendances = attendanceRepository
-                .findByMemberIdAndCheckInBetween(memberId, since, now);
+                .findByMemberIdAndCheckInTimeBetween(memberId, since, now);
 
         log.info("Found {} attendance records for member", attendances.size());
 
@@ -202,6 +208,7 @@ public class AttendanceServiceimpl {
      * Get today's attendance summary
      */
     @Transactional(readOnly = true)
+    @Override
     public TodayAttendanceSummary getTodayAttendanceSummary() {
         log.debug("Fetching today's attendance summary");
 
@@ -209,11 +216,11 @@ public class AttendanceServiceimpl {
         LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
 
         List<Attendance> attendances = attendanceRepository
-                .findByCheckInBetweenOrderByCheckInDesc(todayStart, todayEnd);
+                .findByCheckInTimeBetweenOrderByCheckInTimeDesc(todayStart, todayEnd);
 
         long totalCheckIns = attendances.size();
         long currentlyInGym = attendances.stream()
-                .filter(a -> a.checkOutTime() == null)
+                .filter(a -> a.getCheckOutTime() == null)
                 .count();
         long checkedOut = totalCheckIns - currentlyInGym;
 
@@ -235,6 +242,7 @@ public class AttendanceServiceimpl {
      * Get attendance count for today
      */
     @Transactional(readOnly = true)
+    @Override
     public long getTodayAttendanceCount() {
         LocalDateTime startTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
         LocalDateTime endTime = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
@@ -246,12 +254,13 @@ public class AttendanceServiceimpl {
      * Check if member is currently checked in
      */
     @Transactional(readOnly = true)
+    @Override
     public boolean isMemberCheckedIn(Long memberId) {
         LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
         LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
 
         List<Attendance> todayAttendance = attendanceRepository
-                .findByMemberIdAndCheckInBetween(memberId, todayStart, todayEnd);
+                .findByMemberIdAndCheckInTimeBetween(memberId, todayStart, todayEnd);
 
         return todayAttendance.stream()
                 .anyMatch(a -> a.getCheckOutTime() == null);

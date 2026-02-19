@@ -2,7 +2,7 @@ package com.metafit.controller;
 
 import com.metafit.service.AttendanceService;
 import com.metafit.service.MemberService;
-import com.metafit.service.impl.PaymentService;
+import com.metafit.service.PaymentService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,7 @@
 package com.metafit.repository;
 
-import com.metafit.entity.*;
+import com.metafit.entity.DeviceEventLog;
+import com.metafit.enums.DeviceEventType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -46,8 +47,12 @@ public interface DeviceEventLogRepository extends JpaRepository<DeviceEventLog, 
     @Query("SELECT COUNT(e) FROM DeviceEventLog e WHERE " +
             "e.device.id = :deviceId AND " +
             "e.eventType = 'CHECK_IN' AND " +
-            "DATE(e.eventTime) = CURRENT_DATE")
-    long countTodayCheckInsByDevice(@Param("deviceId") Long deviceId);
+            "e.eventTime BETWEEN :startTime AND :endTime")
+    long countTodayCheckInsByDevice(
+            @Param("deviceId") Long deviceId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime
+    );
 
     @Query("SELECT e.eventType, COUNT(e) FROM DeviceEventLog e WHERE " +
             "e.device.id = :deviceId AND " +

@@ -1,5 +1,6 @@
 package com.metafit.service;
 
+import com.metafit.dto.request.attendance.CheckInRequest;
 import com.metafit.dto.request.attendance.CheckOutRequest;
 import com.metafit.dto.response.attendance.AttendanceResponse;
 import com.metafit.dto.response.attendance.MemberAttendanceItem;
@@ -10,84 +11,22 @@ import java.util.List;
 
 /**
  * Attendance Service Interface
- * Handles all attendance-related business logic
  */
 public interface AttendanceService {
 
-    /**
-     * Check-in a member
-     * @param request Check-in details (memberId, source, notes)
-     * @param checkedInBy Username of staff who checked in the member
-     * @return Attendance response
-     */
-    AttendanceResponse checkIn(com.metafit.dto.request.attendance.CheckInRequest request, String checkedInBy);
+    AttendanceResponse checkIn(CheckInRequest request, String checkedInBy);
 
-    /**
-     * Check-out a member
-     * @param request Check-out details (memberId or attendanceId)
-     * @return Updated attendance response
-     */
     AttendanceResponse checkOut(CheckOutRequest request);
 
-    /**
-     * Get today's attendance list
-     * @return List of today's attendance records
-     */
     List<AttendanceResponse> getTodayAttendance();
 
-    /**
-     * Get today's attendance summary
-     * @return Summary with total count, active check-ins, etc.
-     */
-    TodayAttendanceSummary getTodaySummary();
-
-    /**
-     * Get attendance count for today
-     * @return Count of today's check-ins
-     */
-    Long getTodayAttendanceCount();
-
-    /**
-     * Get attendance records between dates
-     * @param startDate Start date
-     * @param endDate End date
-     * @return List of attendance records
-     */
-    List<AttendanceResponse> getAttendanceBetweenDates(LocalDate startDate, LocalDate endDate);
-
-    /**
-     * Get attendance history for a member
-     * @param memberId Member ID
-     * @param days Number of days to look back (default 30)
-     * @return List of attendance records
-     */
-    List<AttendanceResponse> getMemberAttendanceHistory(Long memberId, Integer days);
-
-    /**
-     * Check if member is currently checked in
-     * @param memberId Member ID
-     * @return true if checked in, false otherwise
-     */
-    boolean isMemberCheckedIn(Long memberId);
-
-    /**
-     * Get attendance statistics for a member
-     * @param memberId Member ID
-     * @return Statistics (total count, average duration, etc.)
-     */
-    TodayAttendanceSummary getMemberAttendanceStats(Long memberId);
-
-    /**
-     * Get active check-ins (members currently in gym)
-     * @return List of active attendance records
-     */
-    List<AttendanceResponse> getActiveCheckIns();
-
-    // ✅ ADDED: Missing methods
     TodayAttendanceSummary getTodayAttendanceSummary();
+
+    long getTodayAttendanceCount();
+
     List<AttendanceResponse> getAttendanceByDateRange(LocalDate startDate, LocalDate endDate);
+
     List<MemberAttendanceItem> getMemberAttendanceHistory(Long memberId, int days);
-    List<AttendanceResponse> getMembersCurrentlyInside();
-    Long getAttendanceCount(LocalDate date);
-    boolean hasCheckedInToday(Long memberId);
+
+    boolean isMemberCheckedIn(Long memberId);
 }

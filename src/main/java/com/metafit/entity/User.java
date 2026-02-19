@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDateTime;
 
@@ -21,9 +20,7 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(updatable = false, nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -68,10 +65,4 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public enum UserRole {
-        OWNER,      // Full access
-        ADMIN,      // Almost full access
-        RECEPTION,  // Member management, attendance, payments
-        TRAINER     // View members, mark attendance
-    }
 }

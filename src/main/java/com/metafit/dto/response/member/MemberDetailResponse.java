@@ -1,29 +1,37 @@
 package com.metafit.dto.response.member;
 
-import com.metafit.entity.Member;
+import com.metafit.enums.Gender;
+import com.metafit.enums.MemberStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MemberDetailResponse {
     private Long id;
     private String name;
     private String phone;
     private String email;
-    private Member.Gender gender;
+    private Gender gender;
     private LocalDate dateOfBirth;
     private Integer age;
     private String address;
     private String emergencyContact;
     private String emergencyContactName;
-    private Member.MemberStatus status;
+    private MemberStatus status;
     private LocalDate membershipStartDate;
     private LocalDate membershipEndDate;
     private Integer daysRemaining;
     private String membershipPlan;
-    private Double membershipAmount;
+    private BigDecimal membershipAmount;
     private Long assignedTrainerId;
     private String assignedTrainerName;
     private String trainerNotes;

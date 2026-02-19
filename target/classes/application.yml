@@ -1,13 +1,15 @@
 spring:
   application:
     name: gym-management-saas
+  profiles:
+    active: local
 
   # Master Database Configuration
   datasource:
     master:
       url: jdbc:postgresql://localhost:5432/gym_master_db
       username: gym_admin
-      password: ${MASTER_DB_PASSWORD}
+      password: ${MASTER_DB_PASSWORD:admin}
       driver-class-name: org.postgresql.Driver
       hikari:
         maximum-pool-size: 10
@@ -47,7 +49,7 @@ tenant:
   datasource:
     url-prefix: jdbc:postgresql://localhost:5432/
     username: gym_admin
-    password: ${TENANT_DB_PASSWORD}
+    password: ${TENANT_DB_PASSWORD:admin}
     hikari:
       maximum-pool-size: 5
       minimum-idle: 1
@@ -55,7 +57,7 @@ tenant:
 # Logging Configuration
 logging:
   level:
-    com.mygymapp: DEBUG
+    com.metafit: DEBUG
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
   pattern:

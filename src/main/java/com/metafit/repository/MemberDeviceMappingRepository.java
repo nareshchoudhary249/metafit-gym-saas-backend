@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface MemberDeviceMappingRepository extends JpaRepository<MemberDeviceMapping, Long> {
 
-    List<MemberDeviceMappingRepository> findByMemberId(Long memberId);
+    List<MemberDeviceMapping> findByMemberId(Long memberId);
 
     List<MemberDeviceMapping> findByDeviceId(Long deviceId);
 

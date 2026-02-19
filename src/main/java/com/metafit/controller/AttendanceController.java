@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * REST controller for attendance management
@@ -125,13 +124,13 @@ public class AttendanceController {
      * GET /api/attendance/member/{memberId}?days=30
      */
     @GetMapping("/member/{memberId}")
-    public ResponseEntity<List<AttendanceResponse>> getMemberAttendanceHistory(
+    public ResponseEntity<List<MemberAttendanceItem>> getMemberAttendanceHistory(
             @PathVariable Long memberId,
             @RequestParam(defaultValue = "30") int days) {
 
         log.info("GET /api/attendance/member/{} - Last {} days", memberId, days);
 
-        List<AttendanceResponse> history = attendanceService
+        List<MemberAttendanceItem> history = attendanceService
                 .getMemberAttendanceHistory(memberId, days);
 
         return ResponseEntity.ok(history);

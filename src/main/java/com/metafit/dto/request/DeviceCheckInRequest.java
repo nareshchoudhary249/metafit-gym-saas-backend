@@ -1,8 +1,7 @@
 
 package com.metafit.dto.request;
 
-import com.metafit.entity.ConnectionType;
-import com.metafit.entity.DeviceType;
+import com.metafit.enums.DeviceType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

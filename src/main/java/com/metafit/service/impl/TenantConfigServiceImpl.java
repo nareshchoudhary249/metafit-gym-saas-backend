@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.metafit.dto.response.config.TenantConfigResponse;
 import com.metafit.entity.master.Tenant;
 import com.metafit.exception.ResourceNotFoundException;
+import com.metafit.repository.master.TenantRepository;
+import com.metafit.service.TenantConfigService;
 import com.metafit.tenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TenantConfigService {
+public class TenantConfigServiceImpl implements TenantConfigService {
 
     private final TenantRepository tenantRepository;
     private final ObjectMapper objectMapper;
@@ -26,6 +28,7 @@ public class TenantConfigService {
      * Get current tenant configuration
      */
     @Transactional(readOnly = true)
+    @Override
     public TenantConfigResponse getCurrentTenantConfig() {
         String tenantCode = TenantContext.getTenantId();
         log.debug("Fetching configuration for tenant: {}", tenantCode);
@@ -66,6 +69,7 @@ public class TenantConfigService {
      * Update tenant configuration
      */
     @Transactional
+    @Override
     public TenantConfigResponse updateTenantConfig(TenantConfigResponse configRequest) {
         String tenantCode = TenantContext.getTenantId();
         log.info("Updating configuration for tenant: {}", tenantCode);

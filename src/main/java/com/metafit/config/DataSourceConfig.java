@@ -4,6 +4,7 @@ import com.metafit.tenancy.TenantRoutingDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.flyway.FlywayDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,9 @@ public class DataSourceConfig {
     @Value("${spring.datasource.master.password}")
     private String masterPassword;
 
+    @Value("${spring.datasource.master.driver-class-name:org.postgresql.Driver}")
+    private String masterDriverClassName;
+
     @Value("${tenant.datasource.url-prefix}")
     private String tenantUrlPrefix;
 
@@ -44,10 +48,20 @@ public class DataSourceConfig {
     @Value("${tenant.datasource.password}")
     private String tenantPassword;
 
+    @Value("${tenant.datasource.driver-class-name:org.postgresql.Driver}")
+    private String tenantDriverClassName;
+
+    @Value("${tenant.datasource.default-db:}")
+    private String tenantDefaultDb;
+
+    @Value("${spring.jpa.hibernate.ddl-auto:validate}")
+    private String hibernateDdlAuto;
+
     /**
      * Master DataSource for tenant management
      */
     @Bean(name = "masterDataSource")
+    @FlywayDataSource
     public DataSource masterDataSource() {
         log.info("Configuring master datasource: {}", masterUrl);
 
@@ -55,7 +69,7 @@ public class DataSourceConfig {
         config.setJdbcUrl(masterUrl);
         config.setUsername(masterUsername);
         config.setPassword(masterPassword);
-        config.setDriverClassName("org.postgresql.Driver");
+        config.setDriverClassName(masterDriverClassName);
         config.setMaximumPoolSize(10);
         config.setMinimumIdle(2);
         config.setConnectionTimeout(30000);
@@ -77,7 +91,9 @@ public class DataSourceConfig {
         return new TenantRoutingDataSource(
                 tenantUrlPrefix,
                 tenantUsername,
-                tenantPassword
+                tenantPassword,
+                tenantDriverClassName,
+                tenantDefaultDb
         );
     }
 
@@ -89,13 +105,13 @@ public class DataSourceConfig {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(tenantDataSource());
-        em.setPackagesToScan("com.mygymapp.entity"); // Tenant entities
+        em.setPackagesToScan("com.metafit.entity"); // Tenant entities
 
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
 
         Map<String, Object> properties = new HashMap<>();
-        properties.put("hibernate.hbm2ddl.auto", "validate");
+        properties.put("hibernate.hbm2ddl.auto", hibernateDdlAuto);
         properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
         properties.put("hibernate.show_sql", false);
         properties.put("hibernate.format_sql", true);
@@ -113,13 +129,13 @@ public class DataSourceConfig {
     public LocalContainerEntityManagerFactoryBean masterEntityManagerFactory() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(masterDataSource());
-        em.setPackagesToScan("com.mygymapp.entity.master"); // Master entities
+        em.setPackagesToScan("com.metafit.entity.master"); // Master entities
 
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
 
         Map<String, Object> properties = new HashMap<>();
-        properties.put("hibernate.hbm2ddl.auto", "validate");
+        properties.put("hibernate.hbm2ddl.auto", hibernateDdlAuto);
         properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
 
         em.setJpaPropertyMap(properties);

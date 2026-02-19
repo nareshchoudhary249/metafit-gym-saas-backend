@@ -1,12 +1,32 @@
 package com.metafit.service.impl;
 
-import com.metafit.dto.request.*;
-import com.metafit.dto.response.*;
-import com.metafit.entity.*;
-import com.metafit.enums.*;
+import com.metafit.dto.request.CreateDeviceRequest;
+import com.metafit.dto.request.DeviceCheckInRequest;
+import com.metafit.dto.request.DeviceHeartbeatRequest;
+import com.metafit.dto.request.EnrollMemberDeviceRequest;
+import com.metafit.dto.response.DeviceCheckInResponse;
+import com.metafit.dto.response.DeviceDetailResponse;
+import com.metafit.dto.response.DeviceEventLogResponse;
+import com.metafit.dto.response.DeviceResponse;
+import com.metafit.dto.response.DeviceStatsResponse;
+import com.metafit.dto.response.MemberDeviceMappingResponse;
+import com.metafit.entity.Attendance;
+import com.metafit.entity.Device;
+import com.metafit.entity.DeviceEventLog;
+import com.metafit.entity.Member;
+import com.metafit.entity.MemberDeviceMapping;
+import com.metafit.enums.AttendanceSource;
+import com.metafit.enums.DeviceEventType;
+import com.metafit.enums.DeviceStatus;
+import com.metafit.enums.DeviceType;
+import com.metafit.enums.MemberStatus;
 import com.metafit.exception.DuplicateResourceException;
 import com.metafit.exception.ResourceNotFoundException;
-import com.metafit.repository.*;
+import com.metafit.repository.AttendanceRepository;
+import com.metafit.repository.DeviceEventLogRepository;
+import com.metafit.repository.DeviceRepository;
+import com.metafit.repository.MemberDeviceMappingRepository;
+import com.metafit.repository.MemberRepository;
 import com.metafit.service.DeviceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,12 +34,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.metafit.enums.AttendanceSource.MOBILE_APP;
 
 @Service
 @RequiredArgsConstructor
@@ -243,7 +264,9 @@ public class DeviceServiceImpl implements DeviceService {
         }
 
         // Check if already checked in
-        if (attendanceRepository.findTodayActiveCheckIn(member.getId()).isPresent()) {
+        LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
+        if (attendanceRepository.findTodayActiveCheckIn(member.getId(), todayStart, todayEnd).isPresent()) {
             String msg = "Member already checked in today";
             logDeviceEvent(device, DeviceEventType.DUPLICATE_CHECK_IN,
                     request.getDeviceIdentifier(), member.getId(), false, msg);
@@ -422,8 +445,10 @@ public class DeviceServiceImpl implements DeviceService {
         long active = deviceRepository.findByActiveTrue().size();
 
         // Today's check-ins across all devices
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        LocalDateTime todayEnd = LocalDate.now().atTime(LocalTime.MAX);
         long todayCheckIns = deviceRepository.findAll().stream()
-                .mapToLong(d -> eventLogRepository.countTodayCheckInsByDevice(d.getId()))
+                .mapToLong(d -> eventLogRepository.countTodayCheckInsByDevice(d.getId(), todayStart, todayEnd))
                 .sum();
 
         // Recent errors (last 24 hours)
@@ -442,7 +467,9 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     @Transactional(readOnly = true)
     public Long getTodayCheckInsByDevice(Long deviceId) {
-        return eventLogRepository.countTodayCheckInsByDevice(deviceId);
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        LocalDateTime todayEnd = LocalDate.now().atTime(LocalTime.MAX);
+        return eventLogRepository.countTodayCheckInsByDevice(deviceId, todayStart, todayEnd);
     }
 
     // ==================== UTILITIES ====================
@@ -506,7 +533,6 @@ public class DeviceServiceImpl implements DeviceService {
             case RFID , NFC_READER -> AttendanceSource.RFID;
             case BIOMETRIC -> AttendanceSource.BIOMETRIC;
             case QR_SCANNER -> AttendanceSource.QR_CODE;
-            case MOBILE_APP -> MOBILE_APP;
             default -> AttendanceSource.MANUAL;
         };
     }
@@ -536,7 +562,9 @@ public class DeviceServiceImpl implements DeviceService {
 
     private DeviceDetailResponse convertToDetailResponse(Device device) {
         long enrolledMembers = mappingRepository.countActiveMappingsByMember(device.getId());
-        long todayCheckIns = eventLogRepository.countTodayCheckInsByDevice(device.getId());
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        LocalDateTime todayEnd = LocalDate.now().atTime(LocalTime.MAX);
+        long todayCheckIns = eventLogRepository.countTodayCheckInsByDevice(device.getId(), todayStart, todayEnd);
 
         return DeviceDetailResponse.builder()
                 .id(device.getId())

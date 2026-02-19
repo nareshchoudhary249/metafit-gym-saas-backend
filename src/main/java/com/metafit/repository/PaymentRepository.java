@@ -37,16 +37,22 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
      * Find today's payments
      */
     @Query("SELECT p FROM Payment p WHERE " +
-            "DATE(p.paymentDate) = CURRENT_DATE " +
+            "p.paymentDate BETWEEN :startDate AND :endDate " +
             "ORDER BY p.paymentDate DESC")
-    List<Payment> findTodayPayments();
+    List<Payment> findTodayPayments(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
     /**
      * Calculate total revenue for today
      */
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE " +
-            "DATE(p.paymentDate) = CURRENT_DATE")
-    Double getTodayRevenue();
+            "p.paymentDate BETWEEN :startDate AND :endDate")
+    Double getTodayRevenue(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
     /**
      * Calculate total revenue between dates
@@ -74,16 +80,22 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
      * Count today's payments
      */
     @Query("SELECT COUNT(p) FROM Payment p WHERE " +
-            "DATE(p.paymentDate) = CURRENT_DATE")
-    Long countTodayPayments();
+            "p.paymentDate BETWEEN :startDate AND :endDate")
+    Long countTodayPayments(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
     /**
      * Get revenue by payment method for today
      */
     @Query("SELECT p.paymentMethod, COALESCE(SUM(p.amount), 0) " +
-            "FROM Payment p WHERE DATE(p.paymentDate) = CURRENT_DATE " +
+            "FROM Payment p WHERE p.paymentDate BETWEEN :startDate AND :endDate " +
             "GROUP BY p.paymentMethod")
-    List<Object[]> getTodayRevenueByPaymentMethod();
+    List<Object[]> getTodayRevenueByPaymentMethod(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
     /**
      * Get revenue by payment method between dates
@@ -105,11 +117,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     /**
      * Get daily revenue report (date, total amount)
      */
-    @Query("SELECT DATE(p.paymentDate) as date, COALESCE(SUM(p.amount), 0) as revenue " +
+    @Query("SELECT CAST(p.paymentDate AS date) as date, COALESCE(SUM(p.amount), 0) as revenue " +
             "FROM Payment p WHERE " +
             "p.paymentDate BETWEEN :startDate AND :endDate " +
-            "GROUP BY DATE(p.paymentDate) " +
-            "ORDER BY DATE(p.paymentDate)")
+            "GROUP BY CAST(p.paymentDate AS date) " +
+            "ORDER BY CAST(p.paymentDate AS date)")
     List<Object[]> getDailyRevenueReport(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
@@ -132,9 +144,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     /**
      * Find last payment for a member
      */
-    @Query("SELECT p FROM Payment p WHERE p.member.id = :memberId " +
-            "ORDER BY p.paymentDate DESC LIMIT 1")
-    Payment findLastPaymentByMemberId(@Param("memberId") Long memberId);
+    Payment findTopByMemberIdOrderByPaymentDateDesc(Long memberId);
 
     /**
      * Count payments in current month

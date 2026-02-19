@@ -66,7 +66,7 @@ subscription:
 # Logging Configuration
 logging:
   level:
-    com.mygymapp: INFO
+    com.metafit: INFO
     org.springframework.web: WARN
     org.hibernate.SQL: WARN
     org.hibernate.type.descriptor.sql.BasicBinder: WARN
